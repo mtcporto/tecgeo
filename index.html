@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Mapa de Brasília</title>
+      <!-- Incluindo o Tailwind -->
+      <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.Default.css" />
+  <style>
+    #map {
+      height: 500px;
+    }
+  </style>
+</head>
+<header class="bg-gray-900 text-white py-4">
+  <div class="container mx-auto text-center">
+      <h1 class="text-3xl font-bold">Tecgeo - Brasília</h1>
+  </div>
+</header>
+<body>
+  <div id="map"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js"></script>
+  <script>
+    // Cria o mapa
+    var map = L.map('map').setView([-15.7942, -47.8825], 10);
+
+    // Adiciona camada de mapa base
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+      maxZoom: 18
+    }).addTo(map);
+
+    // Cria o grupo de clusters
+    var markers = L.markerClusterGroup();
+
+    // Carrega os pontos do arquivo brasilia.json
+    fetch('brasilia.json')
+      .then(response => response.json())
+      .then(data => {
+        // Para cada ponto, cria um marcador e adiciona ao grupo de clusters
+        data.forEach(function(point) {
+          var marker = L.marker([point.latitude, point.longitude]);
+          var popupContent = '';
+
+          // Adicionando informações válidas ao popup
+          popupContent += '<strong>Endereço:</strong> ' + (point.endereco || '') + '<br>';
+          popupContent += '<strong>Valor:</strong> ' + (point.valor ? ' ' + formatarValor(point.valor) : '') + '<br>';
+          popupContent += '<strong>Área:</strong> ' + (point.area ? point.area + ' m²' : '') + '<br>';
+          popupContent += '<strong>Quartos:</strong> ' + (point.quarto || '') + '<br>';
+          popupContent += '<strong>Vagas:</strong> ' + (point.vaga || '') + '<br>';
+          popupContent += '<strong>Banheiros:</strong> ' + (point.banheiro || '') + '<br>';
+          popupContent += '<strong>Bairro:</strong> ' + (point.bairro || '') + '<br>';
+          popupContent += '<strong>Tipo:</strong> ' + (point.tipo || '') + '<br>';
+          popupContent += '<strong>Bairro Completo:</strong> ' + (point.bairro_completo || '') + '<br>';
+
+          // Verifica se a propriedade 'url' existe
+          if (point.hasOwnProperty('url')) {
+            popupContent += '<a href="' + point.url + '" target="_blank">Ver detalhes</a>';
+          }
+
+          marker.bindPopup(popupContent);
+          markers.addLayer(marker);
+        });
+
+        // Adiciona o grupo de clusters ao mapa
+        map.addLayer(markers);
+      })
+      .catch(error => console.error('Erro ao carregar os pontos:', error));
+
+    function formatarValor(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+  </script>
+</body>
+</html>
